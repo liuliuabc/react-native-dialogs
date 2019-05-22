@@ -192,6 +192,7 @@ public class DialogAndroid extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void show(ReadableMap options, final Callback callback) {
+        mCallbackConsumed = false;
         mBuilder = new MaterialDialog.Builder(getCurrentActivity());
         try {
             applyOptions(mBuilder, options);
