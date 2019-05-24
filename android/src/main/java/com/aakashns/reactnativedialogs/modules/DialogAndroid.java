@@ -185,184 +185,220 @@ public class DialogAndroid extends ReactContextBaseJavaModule {
     private int FLAG_NEGATIVE = 2;
     @ReactMethod
     public void show(ReadableMap options, final Callback callback) {
-        mCallbackConsumed = false;
-        mBuilder = new MaterialDialog.Builder(getCurrentActivity());
         try {
+            mCallbackConsumed = false;
+            mBuilder = new MaterialDialog.Builder(getCurrentActivity());
             applyOptions(mBuilder, options);
-        } catch (Exception e) {
-            if (!mCallbackConsumed) {
-                mCallbackConsumed = true;
-                callback.invoke("error", e.getMessage(), options.toString());
-            }
-        }
-
-        if (options.hasKey("onAny")) {
-            // onAny is required, unless it is progress dialog - which I disallow to have buttons
-            mBuilder.onAny(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(MaterialDialog materialDialog, DialogAction dialogAction) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        if (dialogAction == DialogAction.POSITIVE) {
-                            callback.invoke("onAny", FLAG_POSITIVE, materialDialog.isPromptCheckBoxChecked());
-                        } else if (dialogAction == DialogAction.NEUTRAL) {
-                            callback.invoke("onAny", FLAG_NEUTRAL, materialDialog.isPromptCheckBoxChecked());
-                        } else {
-                            callback.invoke("onAny", FLAG_NEGATIVE, materialDialog.isPromptCheckBoxChecked());
-                        }
-                    }
-                }
-            });
-        }
-
-        if (options.hasKey("itemsCallback")) {
-            mBuilder.itemsCallback(new MaterialDialog.ListCallback() {
-                @Override
-                public void onSelection(MaterialDialog materialDialog, View view, int i, CharSequence charSequence) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        callback.invoke("itemsCallback", i, materialDialog.isPromptCheckBoxChecked());
-                    }
-                }
-            });
-        }
-
-        if (options.hasKey("itemsCallbackSingleChoice")) {
-            // Check if there is a preselected index
-            int selectedIndex = options.hasKey("selectedIndex") ? options.getInt("selectedIndex") : -1;
-            mBuilder.itemsCallbackSingleChoice(selectedIndex, new MaterialDialog.ListCallbackSingleChoice() {
-                @Override
-                public boolean onSelection(MaterialDialog materialDialog, View view, int i, CharSequence charSequence) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        charSequence = charSequence == null ? "" : charSequence;
-                        callback.invoke("itemsCallbackSingleChoice", i, materialDialog.isPromptCheckBoxChecked());
-                    }
-                    return true;
-                }
-            });
-        }
-
-        if (options.hasKey("itemsCallbackMultiChoice")) {
-            // Check if there are preselected indices
-            Integer[] selectedIndices = null;
-            if (options.hasKey("selectedIndices")) {
-                ReadableArray arr = options.getArray("selectedIndices");
-                selectedIndices = new Integer[arr.size()];
-                for (int i = 0; i < arr.size(); i++) {
-                    selectedIndices[i] = arr.getInt(i);
-                }
-            }
-
-            mBuilder.itemsCallbackMultiChoice(selectedIndices, new MaterialDialog.ListCallbackMultiChoice() {
-                @Override
-                public boolean onSelection(MaterialDialog materialDialog, Integer[] integers, CharSequence[] charSequences) {
-
-                    // Concatenate selected IDs into a string
-                    StringBuilder selected = new StringBuilder("");
-                    for (int i = 0; i < integers.length - 1; i++) {
-                        selected.append(integers[i]).append(",");
-                    }
-                    if (integers.length > 0) {
-                        selected.append(integers[integers.length - 1]);
-                    }
-
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        callback.invoke("itemsCallbackMultiChoice", selected.toString(), materialDialog.isPromptCheckBoxChecked());
-                    }
-                    return true;
-                }
-            });
-
-            // Provide a 'Clear' button to unselect all choices
-            if (options.hasKey("multiChoiceClearButton") && options.getBoolean("multiChoiceClearButton")) {
-                mBuilder.onNeutral(new MaterialDialog.SingleButtonCallback() {
+            if (options.hasKey("onAny")) {
+                // onAny is required, unless it is progress dialog - which I disallow to have buttons
+                mBuilder.onAny(new MaterialDialog.SingleButtonCallback() {
                     @Override
                     public void onClick(MaterialDialog materialDialog, DialogAction dialogAction) {
-                        materialDialog.clearSelectedIndices();
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                if (dialogAction == DialogAction.POSITIVE) {
+                                    callback.invoke("onAny", FLAG_POSITIVE, materialDialog.isPromptCheckBoxChecked());
+                                } else if (dialogAction == DialogAction.NEUTRAL) {
+                                    callback.invoke("onAny", FLAG_NEUTRAL, materialDialog.isPromptCheckBoxChecked());
+                                } else {
+                                    callback.invoke("onAny", FLAG_NEGATIVE, materialDialog.isPromptCheckBoxChecked());
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
-        }
 
-        // mBuilder.showListener(new DialogInterface.OnShowListener() {
-        //     @Override
-        //     public void onShow(DialogInterface dialog) {
-        //         // if (!mCallbackConsumed) {
-        //         //     mCallbackConsumed = true;
-        //         //     callback.invoke("showListener");
-        //         // }
-        //         mCallbackConsumed = false;
-        //     }
-        // });
-
-        if (options.hasKey("cancelListener")) {
-            mBuilder.cancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        callback.invoke("cancelListener");
+            if (options.hasKey("itemsCallback")) {
+                mBuilder.itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog materialDialog, View view, int i, CharSequence charSequence) {
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                callback.invoke("itemsCallback", i, materialDialog.isPromptCheckBoxChecked());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
-        }
-
-        if (options.hasKey("dismissListener")) {
-            mBuilder.dismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        callback.invoke("dismissListener");
-                    }
-                }
-            });
-        }
-
-        if (options.hasKey("input")) {
-            ReadableMap input = options.getMap("input");
-
-            // Check for hint and prefilled text
-            String hint = input.hasKey("hint") ? input.getString("hint") : null;
-            String prefill = input.hasKey("prefill") ? input.getString("prefill") : null;
-
-            // Check if empty input is allowed
-            boolean allowEmptyInput = !input.hasKey("allowEmptyInput") || input.getBoolean("allowEmptyInput");
-
-            // TODO : Provide pre-selected input types in Javascript
-            if (input.hasKey("type")) {
-                mBuilder.inputType(input.getInt("type"));
+                });
             }
 
-            int minLength = input.hasKey("minLength") ? input.getInt("minLength") : 0;
-            int maxLength = input.hasKey("maxLength") ? input.getInt("maxLength") : -1;
+            if (options.hasKey("itemsCallbackSingleChoice")) {
+                // Check if there is a preselected index
+                int selectedIndex = options.hasKey("selectedIndex") ? options.getInt("selectedIndex") : -1;
+                mBuilder.itemsCallbackSingleChoice(selectedIndex, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog materialDialog, View view, int i, CharSequence charSequence) {
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                charSequence = charSequence == null ? "" : charSequence;
+                                callback.invoke("itemsCallbackSingleChoice", i, materialDialog.isPromptCheckBoxChecked());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return true;
+                    }
+                });
+            }
 
-            mBuilder.inputRange(minLength, maxLength);
+            if (options.hasKey("itemsCallbackMultiChoice")) {
+                // Check if there are preselected indices
+                Integer[] selectedIndices = null;
+                if (options.hasKey("selectedIndices")) {
+                    ReadableArray arr = options.getArray("selectedIndices");
+                    selectedIndices = new Integer[arr.size()];
+                    for (int i = 0; i < arr.size(); i++) {
+                        selectedIndices[i] = arr.getInt(i);
+                    }
+                }
 
-            mBuilder.input(hint, prefill, allowEmptyInput, new MaterialDialog.InputCallback() {
-                @Override
-                public void onInput(MaterialDialog materialDialog, CharSequence charSequence) {
-                    if (!mCallbackConsumed) {
-                        mCallbackConsumed = true;
-                        callback.invoke("input", charSequence.toString(), materialDialog.isPromptCheckBoxChecked());
+                mBuilder.itemsCallbackMultiChoice(selectedIndices, new MaterialDialog.ListCallbackMultiChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog materialDialog, Integer[] integers, CharSequence[] charSequences) {
+
+                        // Concatenate selected IDs into a string
+                        StringBuilder selected = new StringBuilder("");
+                        for (int i = 0; i < integers.length - 1; i++) {
+                            selected.append(integers[i]).append(",");
+                        }
+                        if (integers.length > 0) {
+                            selected.append(integers[integers.length - 1]);
+                        }
+
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                callback.invoke("itemsCallbackMultiChoice", selected.toString(), materialDialog.isPromptCheckBoxChecked());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return true;
+                    }
+                });
+
+                // Provide a 'Clear' button to unselect all choices
+                if (options.hasKey("multiChoiceClearButton") && options.getBoolean("multiChoiceClearButton")) {
+                    mBuilder.onNeutral(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(MaterialDialog materialDialog, DialogAction dialogAction) {
+                            materialDialog.clearSelectedIndices();
+                        }
+                    });
+                }
+            }
+
+            // mBuilder.showListener(new DialogInterface.OnShowListener() {
+            //     @Override
+            //     public void onShow(DialogInterface dialog) {
+            //         // if (!mCallbackConsumed) {
+            //         //     mCallbackConsumed = true;
+            //         //     callback.invoke("showListener");
+            //         // }
+            //         mCallbackConsumed = false;
+            //     }
+            // });
+
+            if (options.hasKey("cancelListener")) {
+                mBuilder.cancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                callback.invoke("cancelListener");
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+
+            if (options.hasKey("dismissListener")) {
+                mBuilder.dismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                callback.invoke("dismissListener");
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+
+            if (options.hasKey("input")) {
+                ReadableMap input = options.getMap("input");
+
+                // Check for hint and prefilled text
+                String hint = input.hasKey("hint") ? input.getString("hint") : null;
+                String prefill = input.hasKey("prefill") ? input.getString("prefill") : null;
+
+                // Check if empty input is allowed
+                boolean allowEmptyInput = !input.hasKey("allowEmptyInput") || input.getBoolean("allowEmptyInput");
+
+                // TODO : Provide pre-selected input types in Javascript
+                if (input.hasKey("type")) {
+                    mBuilder.inputType(input.getInt("type"));
+                }
+
+                int minLength = input.hasKey("minLength") ? input.getInt("minLength") : 0;
+                int maxLength = input.hasKey("maxLength") ? input.getInt("maxLength") : -1;
+
+                mBuilder.inputRange(minLength, maxLength);
+
+                mBuilder.input(hint, prefill, allowEmptyInput, new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(MaterialDialog materialDialog, CharSequence charSequence) {
+                        try {
+                            if (!mCallbackConsumed) {
+                                mCallbackConsumed = true;
+                                callback.invoke("input", charSequence.toString(), materialDialog.isPromptCheckBoxChecked());
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+            UiThreadUtil.runOnUiThread(new Runnable() {
+                public void run() {
+                    try {
+                        if (mDialog != null)
+                            mDialog.dismiss();
+                        mDialog = mBuilder.build();
+                        mDialog.show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             });
-        }
-        UiThreadUtil.runOnUiThread(new Runnable() {
-            public void run() {
-                if (mDialog != null)
-                    mDialog.dismiss();
-                mDialog = mBuilder.build();
-                mDialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                if (!mCallbackConsumed) {
+                    mCallbackConsumed = true;
+                    callback.invoke("error", e.getMessage(), options.toString());
+                }
+            } catch (Exception e1) {
+                e1.printStackTrace();
             }
-        });
+        }
     }
 
     @ReactMethod
-    public void dismiss() {
+    public void dismiss(){
         if (mDialog != null)
             mDialog.dismiss();
     }
